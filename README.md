@@ -85,43 +85,21 @@ This command will list all the npm scripts listed in the current directory's pac
 `run command line`
 This command will prompt the user for a command line string. That string will be ran and the results display if the `set show output` is set. These command lines can use the following environment variables:
 
-$cd - The current directory
+Currently there is one special variable you ca use:
+$1 is the selected file
 
-$lp - The left panel directory
-
-$lpf - The left panel file
-
-$rp - The right panel directory
-
-$rpf - The right panel file
-
-$cf - The current file under the cursor of the current panel. The path is removed and is just the file name. Since the directory is moved to before running the command, this makes for an easy way to reference the current file without worrying about special characters in the path (like spaces).
+Executing del $1 for example would delete the currenlty selected file.
 
 The commands are sorted and similar command lines are removed to compact the history. Therefore, you can run the same command many times, but it will be in the history only once. Unfortunately, this doesn't preserve the order of command execution.
-
-If you are using a full path environment variable, you will want to reference it like this:  `ls "${cd}"`. This will list the current directory with preserving the file path spaces. But, since the current directory is moved to before running the command, you can just use `ls`. This is just to illustrate the issue.
 
 #### Files Created and Used
 
 New script files will be created in the user specified scripts directory when the `create script` command is issued.
 
-The plugin will create the following environment variables for the scripts to use:
-
-$FILES_SELECTED - The currently selected file
-
-$LEFT_PANE - The directory of the left pane
-
-$RIGHT_PANE - The directory of the right pane
-
-$CURRENT_DIRECTORY - The currently selected directory
-
-$LEFT_PANE_SELECTED_FILE - The currently selected file in the left pane
-
-$RIGHT_PANE_SELECTED_FILE - The currently selected file in the right pane
-
 ### Example Scripts
 
-I created another [repository](https://github.com/raguay/fman-Launch-Script-Scripts) of scripts that I use with this plugin. Give them a try and add your own!
+Here you can find the examples: 
+[https://github.com/BenjaminKobjolke/FMANLaunchScriptsForWindows/tree/master/examples](https://github.com/BenjaminKobjolke/FMANLaunchScriptsForWindows/tree/master/examples) of scripts that I use with this plugin. Give them a try and add your own!
 
 ### Features
 
@@ -129,11 +107,8 @@ I created another [repository](https://github.com/raguay/fman-Launch-Script-Scri
 - Launch scripts from the script directory.
 - Edit scripts in the scripts directory.
 - Create new scripts in the scripts directory.
-- Launch a NPM script in a directory with a `package.json` file.
-- Set the shell initializing script to setup the environment properly.
-- Currently, only tested under macOS.
 - Run a command line and save them in a history buffer.
 
 ### Features Still in the Works
 
-- Run Gulp commands
+- Launch a NPM script in a directory with a `package.json` file.
