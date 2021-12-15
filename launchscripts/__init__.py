@@ -176,7 +176,7 @@ class LaunchScript(DirectoryPaneCommand):
             #show_alert(comm)
             # this should hide the output but it still shows up for a second
             #Output = run(comm,stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            #Output = run(comm)
+            Output = run(comm)
             
         clear_status_message()
 
