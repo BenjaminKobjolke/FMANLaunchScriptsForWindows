@@ -1,6 +1,7 @@
 #
 # Load the libraries that are used in these commands.
 #
+import subprocess
 from core.quicksearch_matchers import contains_chars
 from fman import DirectoryPaneCommand, show_prompt, show_quicksearch, QuicksearchItem, show_status_message, clear_status_message, save_json, load_json, show_alert
 import os
@@ -20,14 +21,14 @@ def _GetScriptVars():
     #
     # Get the scripts directory.
     #
-    scriptVars = load_json("LaunchScript.json")
+    scriptVars = load_json("LaunchScriptWindows.json")
     if scriptVars is None:
         scriptVars = dict()
         scriptVars['show_output'] = True
         scriptVars['directory'] = os.path.expanduser('~/bin')
         scriptVars['local_shell'] = os.path.expanduser('~/.bashrc')
         scriptVars['command_line_history'] = ['ls -la']
-        save_json("LaunchScript.json", scriptVars)
+        save_json("LaunchScriptWindows.json", scriptVars)
     return(scriptVars)
 
 #
@@ -37,7 +38,7 @@ def _GetScriptVars():
 #              for this plugin.
 #
 def _SaveScriptVars(scriptVars):
-    save_json("LaunchScript.json", scriptVars)
+    save_json("LaunchScriptWindows.json", scriptVars)
 
 #
 # Function:    GoToScriptsDir
@@ -153,48 +154,24 @@ class LaunchScript(DirectoryPaneCommand):
             scriptVars = _GetScriptVars()
 
             #
-            # Get a list of selected files.
-            #
-            selected_files = self.pane.get_selected_files()
-            if len(selected_files) >= 1 or (len(selected_files) == 0 and self.get_chosen_files()):
-                if len(selected_files) == 0 and self.get_chosen_files():
-                    selected_files.append(self.get_chosen_files()[0])
-            fileList = ''
-            first = True
-            for file in selected_files:
-                if first:
-                    fileList += as_human_readable(file)
-                else:
-                    fileList += ',' + as_human_readable(file)
-
-            #
-            # Set the environment variables for the scripts to use.
-            #
-            os.putenv('CURRENT_DIRECTORY', as_human_readable(self.pane.get_path()))
-            panes = self.pane.window.get_panes()
-            os.putenv('LEFT_PANE', as_human_readable(panes[0].get_path()))
-            path = panes[0].get_file_under_cursor()
-            if path is not None:
-                os.putenv('LEFT_PANE_SELECTED_FILE',as_human_readable(path))
-            else:
-                os.putenv('LEFT_PANE_SELECTED_FILE',"")
-            os.putenv('RIGHT_PANE', as_human_readable(panes[1].get_path()))
-            path = panes[1].get_file_under_cursor()
-            if path is not None:
-                os.putenv('RIGHT_PANE_SELECTED_FILE',as_human_readable(path))
-            else:
-                os.putenv('RIGHT_PANE_SELECTED_FILE',"")
-            os.putenv('FILES_SELECTED',fileList)
-
-            #
             # Run the script.
-            #
-            Output = run("source " + scriptVars['local_shell'] + "; '" + scriptVars['directory'] + "/" + script + "'",stdout=PIPE,shell=True)
-            if Output.returncode == 0:
-                if scriptVars['show_output']:
-                    show_alert(Output.stdout.decode("utf-8"))
+            #  
+
+           
+            comm = [scriptVars['directory'] + "/" + script]
+            #files = self.get_chosen_files()
+            files = self.pane.get_selected_files()
+            
+            if len(files) >= 1:
+                for file in files:                    
+                    comm.append(as_human_readable(file))
             else:
-                show_alert("Command line error.")
+                currentDir = as_human_readable(self.pane.get_path())
+                comm.append(currentDir)            
+            
+            #show_alert(comm)
+            Output = run(comm,shell=False)
+            
         clear_status_message()
 
     def _suggest_script(self, query):
@@ -308,14 +285,20 @@ class CreateScript(DirectoryPaneCommand):
                 # Create the script file.
                 #
                 fp = open(newScript,"w+")
-                fp.write("#!/bin/sh\n\n")
-                fp.write("#\n# The following variable are usable:\n#\n")
-                fp.write("# $FILES_SELECTED - The currently selected file\n")
-                fp.write("# $LEFT_PANE - The directory of the left pane\n")
-                fp.write("# $RIGHT_PANE - The directory of the right pane\n")
-                fp.write("# $CURRENT_DIRECTORY - The currently selected directory\n")
-                fp.write("# $LEFT_PANE_SELECTED_FILE - The currently selected file in the left pane\n")
-                fp.write("# $RIGHT_PANE_SELECTED_FILE - The currently selected file in the right pane\n")
+                fp.write("@echo off\n")
+                fp.write("setlocal enabledelayedexpansion\n\n")
+                fp.write("set argCount=0\n")
+                fp.write("for %%x in (%*) do (\n")
+                fp.write("\tset /A argCount+=1\n")
+                fp.write("\tset \"argVec[!argCount!]=%%~x\"\n")
+                fp.write(")\n\n")
+                fp.write("echo Number of arguments to process: %argCount%\n\n")
+                fp.write("for /L %%i in (1,1,%argCount%) do (\n")
+                fp.write("\tREM !argVec[%%i] will either contain all the files or it will be just the directory,\n")
+                fp.write("\tREM if no files were selected\n")
+                fp.write("\techo %%i- \"!argVec[%%i]!\"\n")
+                fp.write(")\n\n")
+                fp.write("pause")
                 fp.close()
                 os.chmod(newScript,0o755)
 
