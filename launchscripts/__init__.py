@@ -10,6 +10,7 @@ import re
 from fman.url import as_human_readable
 from fman.url import as_url
 from subprocess import run, PIPE
+from subprocess import check_output
 
 #
 # Function:       _GetScriptVars
@@ -27,7 +28,7 @@ def _GetScriptVars():
         scriptVars['show_output'] = True
         scriptVars['directory'] = os.path.expanduser('~/bin')
         scriptVars['local_shell'] = os.path.expanduser('~/.bashrc')
-        scriptVars['command_line_history'] = ['ls -la']
+        #scriptVars['command_line_history'] = ['ls -la']
         save_json("LaunchScriptWindows.json", scriptVars)
     return(scriptVars)
 
@@ -61,6 +62,7 @@ class GoToScriptsDir(DirectoryPaneCommand):
 # Description: This function sets the path to the users
 #              shell script or initializing the shell.
 #
+'''
 class SetShellScript(DirectoryPaneCommand):
     def __call__(self):
         scriptVars = _GetScriptVars()
@@ -71,31 +73,33 @@ class SetShellScript(DirectoryPaneCommand):
         else:
             scriptVars['local_shell'] = shellFile
             _SaveScriptVars(scriptVars)
-
+'''
 #
 # Function:   SetShowOutput
 #
 # Description: This function sets the flag to show
 #              the output of the script.
 #
+'''
 class SetShowOutput(DirectoryPaneCommand):
     def __call__(self):
         scriptVars = _GetScriptVars()
         scriptVars['show_output'] = True
         _SaveScriptVars(scriptVars)
-
+'''
 #
 # Function:   SetNotShowOutput
 #
 # Description: This function sets the flag to not show
 #              the output of the script.
 #
+'''
 class SetNotShowOutput(DirectoryPaneCommand):
     def __call__(self):
         scriptVars = _GetScriptVars()
         scriptVars['show_output'] = False
         _SaveScriptVars(scriptVars)
-
+'''
 #
 # Function:   SetTheScriptsDirectory(DirectoryPaneCommand)
 #
@@ -170,7 +174,9 @@ class LaunchScript(DirectoryPaneCommand):
                 comm.append(currentDir)            
             
             #show_alert(comm)
-            Output = run(comm,shell=False)
+            # this should hide the output but it still shows up for a second
+            #Output = run(comm,stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            #Output = run(comm)
             
         clear_status_message()
 
@@ -377,6 +383,7 @@ class LaunchNpmScript(DirectoryPaneCommand):
                 if match or not query:
                     yield QuicksearchItem(scriptName, highlight=match)
 
+'''
 class LaunchMaskScript(DirectoryPaneCommand):
     #
     # This directory command is for launching
@@ -436,6 +443,8 @@ class LaunchMaskScript(DirectoryPaneCommand):
                 if match or not query:
                     yield QuicksearchItem(scriptName, highlight=match)
 
+'''
+
 #
 # Function:    RunCommandLine
 #
@@ -456,6 +465,8 @@ class RunCommandLine(DirectoryPaneCommand):
             #
             # Launch the script given. Show the output.
             #
+            #show_alert(result)
+
             query, script = result
             if query != '':
                 script = query
@@ -464,38 +475,54 @@ class RunCommandLine(DirectoryPaneCommand):
             # Get the variables for this plugin
             #
             scriptVars = _GetScriptVars()
-
-            #
-            # Save the command line.
-            #
             scriptVars['command_line_history'].append(script)
+            #show_alert(script)
 
-            #
-            # Set the environment variables for the scripts to use.
-            #
-            os.putenv('cd', as_human_readable(self.pane.get_path()))
-            panes = self.pane.window.get_panes()
-            os.putenv('lp', as_human_readable(panes[0].get_path()))
-            os.putenv('lpf',as_human_readable(panes[0].get_file_under_cursor()))
-            os.putenv('rp', as_human_readable(panes[1].get_path()))
-            os.putenv('rpf',as_human_readable(panes[1].get_file_under_cursor()))
-            os.putenv('cf', os.path.basename(as_human_readable(self.pane.get_file_under_cursor())))
+            # if script contains $1, $2, etc.
+            # replace with the selected file
+            if script.find('$') != -1:
+                files = self.pane.get_selected_files()                
+                counter = 1
+                if len(files) >= 1:        
+                    for file in files:    
+                        targetString = '$' + str(counter)
+                        targetPath = '"' + as_human_readable(file) + '"'
+                        script = script.replace(targetString, targetPath)
+                        counter += 1
 
-            #
-            # Run the script.
-            #
-            saveDir = os.getcwd()
-            os.chdir(as_human_readable(self.pane.get_path()) + os.path.sep)
-            scriptLine = "source " + scriptVars['local_shell'] + "; " + script
-            Output = run(scriptLine,stdout=PIPE,shell=True)
-            os.chdir(saveDir)
-            if Output.returncode == 0:
-                if scriptVars['show_output']:
-                    show_alert(Output.stdout.decode("utf-8"))
-                scriptVars['command_line_history'] = CleanCommandLineHistory(scriptVars['command_line_history'])
-                _SaveScriptVars(scriptVars)
-            else:
-                show_alert("Command line error.")
+            #show_alert(script)
+            
+            
+            #check_output("dir c:\\", shell=True).decode() 
+            result = ""
+            
+            currentDir = as_human_readable(self.pane.get_path())
+            # replace slashes with double slashes
+            currentDir = currentDir.replace('\\', '\\\\')
+            
+            #show_alert(script)
+
+            process = subprocess.Popen(script,
+                                    shell=True,
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE,
+                                    cwd=currentDir,
+                                    encoding='ISO-8859-1')
+            for line in process.stdout:                                
+                result = result + line + '\n'
+            errcode = process.returncode
+            
+            if errcode is not None:
+                show_alert('cmd %s failed, see above for details', script)            
+
+            if len(result) > 0:
+                show_alert(result)
+
+            
+            scriptVars['command_line_history'] = CleanCommandLineHistory(scriptVars['command_line_history'])
+            _SaveScriptVars(scriptVars)
+            show_alert("Command line executed.")
+           
         clear_status_message()
 
     def _suggest_script(self, query):

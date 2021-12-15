@@ -2,17 +2,45 @@
 
 Plugin for [fman.io](https://fman.io) that gives you the ability to launch scripts in a specified directory in the command pallet of fman. 
 
+I forked this plugin from [raguay](https://github.com/raguay/LaunchScripts) to make it compatible with windows.
+
 # Install
 install the plugin by copying the release to 
 > %AppData%\Roaming\fman\Plugins\User
 
 Or just use the "install plugin" function from within fman and search for FMANLaunchScriptsForWindows.
 
+
 ### Usage
 
 Once loaded, use the `set script directory` command to set a directory where all your scripts will be placed. The default location is `~/bin`. Then use the other commands to interact with the scripts.
 
-Then use the `set shell script` command to set your shell's initializing script. You can give it `~/.zshrc` and it will expand out the home directory okay. This is used to keep a consistant environment when executing scripts. It is necessary to properly run the `launch npm script` command.
+### Example bat file
+```
+@echo off
+setlocal enabledelayedexpansion
+
+set argCount=0
+for %%x in (%*) do (
+	set /A argCount+=1
+	set "argVec[!argCount!]=%%~x"
+)
+
+echo Number of arguments to process: %argCount%
+
+for /L %%i in (1,1,%argCount%) do (	
+	REM !argVec[%%i] will either contain all the files or it will be just the directory,
+	REM if no files were selected
+	echo %%i- "!argVec[%%i]!"
+	REM add your command here
+)
+
+pause
+```
+When you launch a script and you have files selected, then those files will be send as paremters to your script.
+
+If you didn't select any file your current pane's directory will be send as first parameter.
+
 
 #### HotKeys Set
 
@@ -23,15 +51,22 @@ None set.
 `go to scripts dir`
 This command will open the current pane to the scripts directory.
 
+> currently not working on windows - disabled for now
 `set show output`
 This command will set the plug-in to show the output of running a script.
 
+> currently not working on windows - disabled for now
+`set not show output`
+This command will set the plug-in to not show the output of running a script.
+
+> currently not working on windows - disabled for now
 `set not show output`
 This command will set the plug-in to not show the output of running a script.
 
 `set script directory`
 This command sets the currently highlighted directory as the script directory for running and creating scripts.
 
+> currently not working on windows - disabled for now
 `set shell script`
 This command allows the user to tell the plugin what script is their shell's initializing script. You can give it `~/.zshrc` and it will expand it to the absolute path. This is used to setup the proper environment for running the scripts.
 
