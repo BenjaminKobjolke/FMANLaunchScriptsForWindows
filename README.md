@@ -2,9 +2,11 @@
 
 Plugin for [fman.io](https://fman.io) that gives you the ability to launch scripts in a specified directory in the command pallet of fman. 
 
-You can install this plugin by pressing `<shift+cmd+p>` to open the command pallet. Then type `install plugin`. Look for the `Launch Scripts` plugin and select it.
+# Install
+install the plugin by copying the release to 
+> %AppData%\Roaming\fman\Plugins\User
 
-After restarting **fman**, you will have the ability to set a scripts directory, go to the scripts directory, and launch scripts from the scripts directory.
+Or just use the "install plugin" function from within fman and search for FMANLaunchScriptsForWindows.
 
 ### Usage
 
