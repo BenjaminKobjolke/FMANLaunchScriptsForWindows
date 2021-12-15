@@ -48,47 +48,60 @@ None set.
 
 #### Commands
 
-`go to scripts dir`
+#### `go to scripts dir`
 This command will open the current pane to the scripts directory.
 
-> currently not working on windows - disabled for now
+
+*currently not working on windows - disabled for now*
+```
 `set show output`
+
 This command will set the plug-in to show the output of running a script.
+```
 
-> currently not working on windows - disabled for now
+*currently not working on windows - disabled for now*
+```
 `set not show output`
 This command will set the plug-in to not show the output of running a script.
+```
 
-> currently not working on windows - disabled for now
+*currently not working on windows - disabled for now*
+```
 `set not show output`
 This command will set the plug-in to not show the output of running a script.
+```
 
-`set script directory`
+#### `set script directory`
 This command sets the currently highlighted directory as the script directory for running and creating scripts.
 
-> currently not working on windows - disabled for now
+*currently not working on windows - disabled for now*
+```
 `set shell script`
 This command allows the user to tell the plugin what script is their shell's initializing script. You can give it `~/.zshrc` and it will expand it to the absolute path. This is used to setup the proper environment for running the scripts.
+```
 
-`launch script`
+#### `launch script`
 This command will run a script out of the script directory. A list of script files in the script directory will be presented to the user. Once selected, that script will be ran.
 
-`edit script`
+#### `edit script`
 This command will allow the user to edit the script selected. A list of scripts in the scripts directory will be presented to the user to choose from. Once selected, the `open with editor` command will be used to edit the file.
 
-`create script`
+#### `create script`
 This command will ask for a script name. If a file or directory doesn't exist with that name, it will be created, a base script template will be written to it, the execution bit will be set, and the `open with editor` command will be called to edit the newly created script.
 
+*currently not working on windows - disabled for now*
+```
 `launch npm script`
 This command will list all the npm scripts listed in the current directory's package.json file. It will then run the script the user selects from that list.
+```
 
-`run command line`
+#### `run command line`
 This command will prompt the user for a command line string. That string will be ran and the results display if the `set show output` is set. These command lines can use the following environment variables:
 
-Currently there is one special variable you ca use:
+There is one special variable you ca use:
 $1 is the selected file
 
-Executing del $1 for example would delete the currenlty selected file.
+Executing `del $1` for example would delete the currenlty selected file.
 
 The commands are sorted and similar command lines are removed to compact the history. Therefore, you can run the same command many times, but it will be in the history only once. Unfortunately, this doesn't preserve the order of command execution.
 
