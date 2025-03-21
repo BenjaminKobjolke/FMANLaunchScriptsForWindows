@@ -28,7 +28,11 @@ def _GetScriptVars():
         scriptVars['show_output'] = True
         scriptVars['directory'] = os.path.expanduser('~/bin')
         scriptVars['local_shell'] = os.path.expanduser('~/.bashrc')
+        scriptVars['last_used_script'] = ""
         #scriptVars['command_line_history'] = ['ls -la']
+        save_json("LaunchScriptWindows.json", scriptVars)
+    elif 'last_used_script' not in scriptVars:
+        scriptVars['last_used_script'] = ""
         save_json("LaunchScriptWindows.json", scriptVars)
     return(scriptVars)
 
@@ -145,17 +149,27 @@ class LaunchScript(DirectoryPaneCommand):
     #
     def __call__(self):
         show_status_message('Launching a Script...')
+        
+        # Get the variables for this plugin
+        scriptVars = _GetScriptVars()
+        
+        # Use standard show_quicksearch without additional parameters
         result = show_quicksearch(self._suggest_script)
+        
         if result:
             #
             # Launch the script given. Show the output.
             #
             query, script = result
-
-            #
-            # Get the variables for this plugin
-            #
-            scriptVars = _GetScriptVars()
+            
+            # Check if this is our special "last used script" entry
+            if script.startswith("000 - last used script - "):
+                # Extract the actual script name
+                script = script[len("000 - last used script - "):]
+            
+            # Save the selected script as the last used script
+            scriptVars['last_used_script'] = script
+            _SaveScriptVars(scriptVars)
 
             #
             # Run the script.
@@ -187,9 +201,20 @@ class LaunchScript(DirectoryPaneCommand):
         #
         scriptDir = _GetScriptVars()
         scripts = os.listdir(scriptDir['directory'])
-
+        
+        # Get the last used script
+        last_used_script = scriptDir.get('last_used_script', "")
+        
+        # Create a special entry for the last used script
+        if last_used_script and last_used_script in scripts:
+            special_entry = "000 - last used script - " + last_used_script
+            
+            # If there's no query or the query matches our special entry, suggest it first
+            if not query or contains_chars(special_entry.lower(), query.lower()):
+                yield QuicksearchItem(special_entry)
+        
         #
-        # Suggested one to the user and let them pick.
+        # Suggest other scripts to the user
         #
         for script in scripts:
             scriptName = script.strip()
